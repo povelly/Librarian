@@ -16,6 +16,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from django.views.generic import RedirectView
+from django.contrib.staticfiles.storage import staticfiles_storage
+
+from Librarian import views
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
+    path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('/favicon.ico'))),
     path('admin/', admin.site.urls),
-]
+    path('search/', views.BasicSearch.as_view()),
+    path('advanced-search/', views.AdvancedSearch.as_view()),
+    path('test/', views.Test.as_view())
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
