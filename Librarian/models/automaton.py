@@ -49,6 +49,16 @@ class Automaton():
             # TODO
             tmp = Automaton.parse_auxiliary(tree.sub_trees[0], initial_state, result.index(state5), result)
             return Automaton.parse_auxiliary(tree.sub_trees[1], result.index(state6), final_state, tmp)
+        elif tree.root == symbols.QUESTION:
+            state9 = State([], False)
+            state10 = State([], True)
+            result.extend((state9, state10))
+            arc10 = Arc(symbols.EPSILON, result.index(state9))
+            arc11 = Arc(symbols.EPSILON, result.index(state10))
+            result[initial_state].final = True
+            result[initial_state].arcs.append(arc10)
+            state9.arcs.append(arc11)
+            return Automaton.parse_auxiliary(tree.sub_trees[0], result.index(state9), result.index(state10), result)
         elif tree.root == symbols.STAR:
             state7 = State([], False)
             state8 = State([], False)
@@ -314,10 +324,13 @@ class Automaton():
     def walk(self, text):
         state_id = self.initial_state
         occurences = 0
-        for c in text:
+        for i in range(len(text) + 1):
             if self.states[state_id].final:
                 occurences += 1
                 state_id = self.initial_state
+            if i == len(text):
+                break
+            c = text[i]
             partially_good = False
             for a in self.states[state_id].arcs:
                 if a.symbol == ord(c):
@@ -341,6 +354,13 @@ if __name__ == "__main__":
     # print(repr(dfa))
     """
 
-    a = Automaton.dfa("S(a|e|i)rgon")
-    print(a)
-    print(str(a.walk("SargonSargon")))
+    # a = Automaton.dfa("S(a|e|i)rgon")
+    # print(a)
+    # print("nb d'occurences: " + str(a.walk("SargonSargon")))
+
+    # r2 = RegEx("c?")
+    # tt2 = r2.parsex()
+    # print(repr(tt2))
+
+    b = Automaton.dfa("c?")
+    print(b)
