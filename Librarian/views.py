@@ -4,7 +4,10 @@ from rest_framework.response import Response
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from Librarian.utils.kmp import KMP
+import Librarian.regex
+from Librarian.regex.automaton import Automaton
 from Librarian import env
+from Librarian.regex.regex import RegEx
 
 class BasicSearch(APIView):
     def get(self, request, format=None):
@@ -15,7 +18,14 @@ class BasicSearch(APIView):
 
 class AdvancedSearch(APIView):
     def get(self, request, format=None):
-        return HttpResponse("La page de la recherche advanced")
+        pattern = request.GET.get('pattern')
+        if pattern is None:
+            return HttpResponseBadRequest("Pattern has not been defined")
+        def criterion(pattern, text):
+            return Automaton.dfa(pattern).walk(text)
+        return HttpResponse(mapLibrary(pattern, criterion))
+
+        # return HttpResponse(mapLibrary(keyword, KMP))
 
 class Test(APIView):
     def get(self, request, format=None):
@@ -25,6 +35,7 @@ def mapLibrary(pattern, criterion):
     matches = []
     for fileName in os.listdir(env.LIBRARY):
         with open(os.path.join(env.LIBRARY, fileName), 'r') as f:
-            if criterion(pattern, f.read()):
-                matches.append(fileName)
+            occurences = criterion(pattern, f.read())
+            if occurences > 0:
+                matches.append({"file": fileName, "occurences": occurences})
     return json.dumps(matches)
