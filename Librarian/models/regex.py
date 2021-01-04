@@ -1,6 +1,7 @@
-# import symbols
-from Librarian.regex import *
-from Librarian.regex import regex
+try:
+    import symbols
+except:
+    from Librarian.models import symbols
 
 class RegEx():
     def __init__(self, regex):
@@ -266,6 +267,5 @@ if __name__ == "__main__":
     print("to_string >> ", rt)
 
     r = RegEx("a|bc*")
-    # r = RegEx("(a|b)c*")
     res = r.parsex()
     print("parsing   >> ", res)

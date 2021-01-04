@@ -1,6 +1,9 @@
-# import symbols, regex
-from Librarian.regex import *
-from Librarian.regex import regex
+try:
+    import symbols
+    from regex import RegEx
+except:
+    from Librarian.models import symbols
+    from .regex import RegEx
 
 class Arc():
     def __init__(self, symbol, destination):
@@ -118,19 +121,6 @@ class Automaton():
                 for a in epsilon_auto[i].arcs:
                     if a.destination == j:
                         matrix[i][j] = 1
-
-        # for i in range(len(automaton.states)):
-        #     for j in range(len(automaton.states)):
-        #         if not matrix[i]: # TODO
-        #             matrix[i] = []
-        #         matrix[i][j] = 0
-        #         if i == j:
-        #             matrix[i][j] = 1
-        #         for a in epsilon_auto[i].arcs:
-        #             if a.destination == j:
-        #                 matrix[i][j] = 1
-
-
 
         # Step 3
         auto_res = [State([], True)]
@@ -321,55 +311,22 @@ class Automaton():
             if i >= len(self.states):
                 fini = True
 
-    # def walkOLD(self, text):
-    #     i = 0
-    #     occurences = 0
-    #     for c in text:
-    #
-    #         i += 1
-    #     return occurences
-
-    def walkOLD(self, text):
-        state_id = self.initial_state
-        cpt = 0
-
-        while cpt <= len(text):
-            if self.states[state_id].final:
-                return True
-            char = ord(text[cpt])
-            suivant = False
-            for a in self.states[state_id].arcs:
-                if a.symbol == char:
-                    state_id = a.destination
-                    cpt += 1
-                    suivant = True
-            if not suivant:
-                return False
-        return False
-
-
     def walk(self, text):
         state_id = self.initial_state
-        cpt = 0
         occurences = 0
-
-        while cpt <= len(text):
+        for c in text:
             if self.states[state_id].final:
                 occurences += 1
                 state_id = self.initial_state
-                if cpt == len(text):
-                    break
-            char = ord(text[cpt])
-            suivant = False
+            partially_good = False
             for a in self.states[state_id].arcs:
-                if a.symbol == char:
+                if a.symbol == ord(c):
                     state_id = a.destination
-                    cpt += 1
-                    suivant = True
-            if not suivant:
-                break
+                    partially_good = True
+                    break
+            if not partially_good:
+                state_id = self.initial_state
         return occurences
-
 
 if __name__ == "__main__":
     """
@@ -385,5 +342,5 @@ if __name__ == "__main__":
     """
 
     a = Automaton.dfa("S(a|e|i)rgon")
-    # print(a)
-    # print(str(a.walk("SargonSargon")))
+    print(a)
+    print(str(a.walk("SargonSargon")))
