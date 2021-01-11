@@ -1,5 +1,8 @@
 import os, requests, json
-from Librarian import env
+try:
+    from Librarian import env
+except:
+    LIBRARY = os.path.dirname(os.path.dirname(__file__)) + os.path.sep + "static" + os.path.sep + "library"
 
 def KMP(pattern, text):
     tab = [0] * len(pattern)               # Tableau du pattern
