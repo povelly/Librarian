@@ -9,6 +9,7 @@ class Arc():
     def __init__(self, symbol, destination):
         self.symbol = symbol
         self.destination = destination
+
     def __repr__(self):
         return "Arc(" + chr(self.symbol) + " |-> " + str(self.destination) + ")"
 
@@ -16,6 +17,7 @@ class State():
     def __init__(self, arcs, final):
         self.arcs = arcs
         self.final = final
+
     def __repr__(self):
         res = "State(\n    Arcs: ["
         for i in range(len(self.arcs) - 1):
@@ -29,6 +31,7 @@ class Automaton():
     def __init__(self, states, initial_state):
         self.states = states
         self.initial_state = initial_state
+        
     def __repr__(self):
         return "Automaton(\n  States: " + str(self.states) + ",\n Initial_state: " + str(self.initial_state) + "\n)"
 
