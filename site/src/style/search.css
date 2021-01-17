@@ -1,0 +1,24 @@
+.searchContainer {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 3%;
+}
+
+.searchContainer #searchForm {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 10px;
+}
+
+.searchContainer #searchForm > * {
+    margin-left: 5px;
+}
+
+.searchContainer #results {
+    max-width: 800px;
+    flex : 1;
+}
