@@ -11,10 +11,12 @@ export default class Search extends Component {
             searchArea: "",
             searchType: "keyword",
             hasSubmit: false,
-            results: []
+            results: [],
+            suggestions: []
         }
     }
 
+    // appelée lors d'un evenement sur un element du formulaire
     handleChange = event => {
         event.preventDefault();
         this.setState({
@@ -22,9 +24,21 @@ export default class Search extends Component {
         });
     }
 
+    // appelée lors de l'envoie du formulaire
     handleSubmit = () => {
+        // bouchons
+        let res = []
+        for (let i = 1; i <= 50; i++)
+            res.push("res_book_number_" + i);
+        let sugs = []
+        for (let i = 1; i <= 5; i++)
+            sugs.push("sug_book_number_" + i);
+
+        // update state
         this.setState({
             hasSubmit: true,
+            results: res,
+            suggestions : sugs
         });
     }
 
@@ -32,6 +46,7 @@ export default class Search extends Component {
         return (
             <div className="componentContainer">
                 <div className="searchContainer">
+
                     <Form id="searchForm">
                         <Form.Control
                             type="textarea"
@@ -51,12 +66,47 @@ export default class Search extends Component {
                             Rechercher
                         </Button>
                     </Form>
-                    <div id="results">
+
+                    <div id="resultsZone">
                     {
+                        // si la requete de recherche a été envoyé et que des resultats ont été trouvés
                         this.state.hasSubmit && this.state.results.length > 0?
                         (
-                            <p>cc</p>
+                            <div id="resultsAndSuggestions">
+                                <div id="resultsGroup">
+                                    <div>Resultats:</div>
+                                    <div id="results">
+                                        {
+                                            // affichage des résultats
+                                            this.state.results.map((result, i) => {
+                                                return (
+                                                    <div key={i}>
+                                                        {result}
+                                                    </div>
+                                                );
+                                            })
+                                        }
+                                    </div>   
+                                </div>
+
+                                <div id="suggestionsGroup">
+                                    <div>Suggestions:</div>
+                                    <div id="suggestions">
+                                        {
+                                            // affichage des suggestions
+                                            this.state.suggestions.map((suggestion, i) => {
+                                                return (
+                                                    <div key={i}>
+                                                        {suggestion}
+                                                    </div>
+                                                );
+                                            })
+                                        }
+                                    </div>
+                                </div>
+                            </div>
                         ):
+                        // si aucun résultats trouvés
                         (
                             <Alert id="noResults" variant="info">
                                 <p>Aucun résultats trouvés, faites une recherche ou changez vos critères de recherche.</p>
