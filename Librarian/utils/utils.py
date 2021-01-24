@@ -34,12 +34,14 @@ def KMP(pattern, text):
 
 def map_library(pattern, criterion):
     matches = []
-    # book_count = 0
+    book_count = 0
     for fileName in os.listdir(env.LIBRARY):
         with open(os.path.join(env.LIBRARY, fileName), 'r', errors="ignore") as f:
-            # print("processing search : ", book_count, " book")
+            print("processing search : ", book_count, " book")
             occurences = criterion(pattern, f.read())
             if occurences > 0:
                 matches.append({"file": fileName, "occurences": occurences})
-        # book_count = book_count + 1
+        book_count = book_count + 1
+        if len(matches) > 10:
+            break
     return json.dumps(matches)

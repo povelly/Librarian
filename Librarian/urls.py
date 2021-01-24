@@ -24,9 +24,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('/favicon.ico'))),
+    path('favicon.ico', RedirectView.as_view(
+        url=staticfiles_storage.url('/favicon.ico'))),
     path('admin/', admin.site.urls),
-    path('search/', views.BasicSearch.as_view()),
-    path('advanced-search/', views.AdvancedSearch.as_view()),
-    path('test/', views.Test.as_view())
+    path('search', views.BasicSearch.as_view()),
+    path('advanced-search', views.AdvancedSearch.as_view()),
+    path('book', views.GetBook.as_view())
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
