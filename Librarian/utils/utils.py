@@ -1,8 +1,12 @@
-import os, requests, json
+import os
+import requests
+import json
 try:
     from Librarian import env
 except:
-    LIBRARY = os.path.dirname(os.path.dirname(__file__)) + os.path.sep + "static" + os.path.sep + "library"
+    LIBRARY = os.path.dirname(os.path.dirname(
+        __file__)) + os.path.sep + "static" + os.path.sep + "library"
+
 
 def KMP(pattern, text):
     tab = [0] * len(pattern)               # Tableau du pattern
@@ -25,7 +29,8 @@ def KMP(pattern, text):
                 j = tab[j - 1]
             else:
                 i += 1
-    return occurences;
+    return occurences
+
 
 def map_library(pattern, criterion):
     matches = []
