@@ -28,26 +28,24 @@ export default class Search extends Component {
 
     // appelée lors de l'envoie du formulaire
     handleSubmit = async () => {
-        // bouchons
-        if (this.state.searchType == "regex") {
-            this.setState({
-                isLoading: true
-            })
-            try {
-                let response = await axios.get("http://127.0.0.1:8000/advanced-search", { params: { pattern: this.state.searchArea } })
+        this.setState({
+            isLoading: true
+        })
+        try {
+            let response = this.state.searchType === "regex" ? (await axios.get("http://127.0.0.1:8000/advanced-search", { params: { pattern: this.state.searchArea } })) : (await axios.get("http://127.0.0.1:8000/search", { params: { keyword: this.state.searchArea } }))
 
-                // update state
-                this.setState({
-                    isLoading: false,
-                    results: response.data,
-                    suggestions: []
-                });
-            } catch (e) {
-                this.setState({
-                    isLoading: false
-                })
-            }
+            // update state
+            this.setState({
+                isLoading: false,
+                results: response.data,
+                suggestions: []
+            });
+        } catch (e) {
+            this.setState({
+                isLoading: false
+            })
         }
+
     }
 
     handleDownloadFile = async event => {
