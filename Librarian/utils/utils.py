@@ -1,6 +1,8 @@
 import os
 import requests
 import json
+import re
+
 try:
     from Librarian import env
 except:
@@ -45,3 +47,16 @@ def map_library(pattern, criterion):
         if len(matches) > 10:
             break
     return json.dumps(matches)
+
+# retourne la liste de tout les mots du livre bookname
+
+
+def get_keywords(bookname):
+    res = set()
+    with open(LIBRARY + "/" + bookname, 'r', errors="ignore") as file:
+        for line in file:
+            line = re.sub('[^A-Za-z]+', ' ', line)
+            for word in line.split():
+                print(word.lower())
+                res.add(word.lower())
+        return res

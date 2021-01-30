@@ -1,10 +1,22 @@
-import os, pathlib, time
-LIBRARY = str(pathlib.Path().absolute()) + os.path.sep + "static" + os.path.sep + "library"
+import os
+import pathlib
+import time
+import re
+LIBRARY = str(pathlib.Path().absolute()) + os.path.sep + \
+    "static" + os.path.sep + "library"
+
 
 class Node():
-    def __init__(self, fileName, links = None):
+    def __init__(self, fileName, links=None):
         self.fileName = fileName
         self.links = links or []
+        # calcule la liste des mots du livre et la stock pour éviter calculs multiples
+        self.words = set()
+        with open(LIBRARY + "/" + fileName, 'r', errors="ignore") as file:
+            for line in file:
+                line = re.sub('[^A-Za-z]+', ' ', line)
+                for word in line.split():
+                    self.words.add(word.lower())
 
     def __str__(self):
         res = "Node(" + self.fileName + "):\n  Links:["
@@ -20,19 +32,12 @@ class Node():
         self.links.append(fileName)
 
     def distance(self, node):
-        def node_to_set(node):
-            s = set()
-            with open(LIBRARY + os.path.sep + node.fileName, 'r') as file:
-                for line in file:
-                    for word in line.split():
-                        s.add(word)
-            return s
-        words_self = node_to_set(self)
-        words_node = node_to_set(node)
-        return 1 - len(words_self.intersection(words_node)) / len(words_self.union(words_node))
+        return (len(self.words.union(node.words)) - len(self.words.intersection(node.words))) / len(self.words.union(node.words))
+        # return 1 - len(words_self.intersection(words_node)) / len(words_self.union(words_node))
+
 
 class Graph():
-    def __init__(self, nodes = []):
+    def __init__(self, nodes=[]):
         self.nodes = nodes
 
     def __str__(self):
@@ -46,19 +51,30 @@ class Graph():
     def add_node(self, node):
         self.nodes.append(node)
 
-    @staticmethod
-    def jaccard(p = 0.7):
+    @ staticmethod
+    def jaccard(p=0.65):
         graph = Graph()
-        for fileName in os.listdir(LIBRARY):
-            graph.add_node(Node(fileName))
+        # on met tout les livres comme sommet du graphe
+        for i, fileName in enumerate(os.listdir(LIBRARY)):
+            if ".txt" in fileName:  # pour ne pas ajouter le script .sh
+                print("Create node for book number " +
+                      str(i) + " (" + fileName + ")")
+                graph.add_node(Node(fileName))
+        # pour chaque noeud du graphe
         for i in range(len(graph.nodes)):
+            print("Create links for node number " + str(i) +
+                  " (" + graph.nodes[i].fileName + ")")
             n1 = graph.nodes[i]
-            for j in range(i + 1, len(graph.nodes)):
-                n2 = graph.nodes[j]
-                if n2.fileName not in n1.links and n1.distance(n2) < p:
-                    n1.add_link(n2.fileName)
-                    n2.add_link(n1.fileName)
+            # pour chaque autre noeud du graphe
+            for j in range(len(graph.nodes)):
+                if i != j:
+                    n2 = graph.nodes[j]
+                    # si distance entre les deux noeuds < p, on créer une arrete entre les deux noeuds
+                    if n1.distance(n2) < p:
+                        n1.add_link(n2.fileName)
+                        n2.add_link(n1.fileName)
         return graph
+
 
 """
 def distance(n1, n2):
@@ -118,7 +134,8 @@ def jaccard_old(p = 0.70):
             # time_elapsed2 = time.process_time() - starting_time2
             # print("time elapsed2, distance(): ", time_elapsed2)
             # print("d3: ", n1.fileName, "<>", n2.fileName, ">>", d3)
-            if n2.fileName not in n1.links and distance(n1, n2) < p: # TODO remplacer la fonction
+            # TODO remplacer la fonction
+            if n2.fileName not in n1.links and distance(n1, n2) < p:
                 n1.add_link(n2.fileName)
                 n2.add_link(n1.fileName)
 
@@ -135,4 +152,4 @@ if __name__ == "__main__":
     print("j:", j)
     print("\nLinks:")
     for i in range(len(j.nodes)):
-        print("  links[" + str(i) + "]:", j.nodes[i].links)
+        print("  links[" + j.nodes[i].fileName + "]:", j.nodes[i].links)
