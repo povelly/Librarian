@@ -82,7 +82,7 @@ export default class Search extends Component {
                                     onChange={this.handleChange}
                                     maxLength="100"
                                 />
-                                <Form.Control as="select" name="searchType" onChange={this.handleChange}>
+                                <Form.Control as="select" name="searchType" onChange={this.handleChange} value={this.state.searchType}>
                                     <option value="keyword">Par mot-clé</option>
                                     <option value="regex">Par RegEx</option>
                                 </Form.Control>
@@ -99,14 +99,14 @@ export default class Search extends Component {
                                         (
                                             <div id="resultsAndSuggestions">
                                                 <div id="resultsGroup">
-                                                    <div>Resultats:</div>
+                                                    <div>{this.state.results.length} resultats:</div>
                                                     <div id="results">
                                                         {
                                                             // affichage des résultats
                                                             this.state.results.map((result, i) => {
                                                                 return (
                                                                     <div key={i}>
-                                                                        <a href="javascript:void(0)" onClick={this.handleDownloadFile} name={result.file}>{result.file}</a>
+                                                                        <a href="javascript:void(0)" onClick={this.handleDownloadFile} name={result}>{result}</a>
                                                                     </div>
                                                                 );
                                                             })

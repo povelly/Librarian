@@ -2,12 +2,29 @@ import os
 import requests
 import json
 import re
+import pickle
+from ..models.graph import closeness_ranking
 
 try:
     from Librarian import env
 except:
     LIBRARY = os.path.dirname(os.path.dirname(
         __file__)) + os.path.sep + "static" + os.path.sep + "library"
+
+
+# on load le graph de jaccard
+jaccard = pickle.load(open("./static/jaccard.p", "rb"))
+
+# on load la table d'index
+indexing = pickle.load(open("./static/indexing.p", "rb"))
+
+
+def basic_search_on_index(keyword, indexing):
+    occurences = indexing.get(keyword)
+    if occurences is not None:
+        return occurences
+    else:
+        return 0
 
 
 def KMP(pattern, text):
@@ -35,17 +52,17 @@ def KMP(pattern, text):
 
 
 def map_library(pattern, criterion):
+    # on récupère la liste de tout les livres qui contiennent pattern
     matches = []
     book_count = 0
-    for fileName in os.listdir(env.LIBRARY):
-        with open(os.path.join(env.LIBRARY, fileName), 'r', errors="ignore") as f:
-            print("processing search : ", book_count, " book")
-            occurences = criterion(pattern, f.read())
-            if occurences > 0:
-                matches.append({"file": fileName, "occurences": occurences})
+
+    for fileName in indexing:
+        occurences = criterion(pattern, indexing.get(fileName))
+        if occurences > 0:
+            matches.append(fileName)
         book_count = book_count + 1
-        if len(matches) > 10:
-            break
+    # on trie la liste par closeness ranking
+    matches = closeness_ranking(jaccard, matches)
     return json.dumps(matches)
 
 # retourne la liste de tout les mots du livre bookname

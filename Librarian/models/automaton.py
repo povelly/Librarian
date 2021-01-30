@@ -5,6 +5,7 @@ except:
     from Librarian.models import symbols
     from .regex import RegEx
 
+
 class Arc():
     def __init__(self, symbol, destination):
         self.symbol = symbol
@@ -12,6 +13,7 @@ class Arc():
 
     def __repr__(self):
         return "Arc(" + chr(self.symbol) + " |-> " + str(self.destination) + ")"
+
 
 class State():
     def __init__(self, arcs, final):
@@ -27,11 +29,12 @@ class State():
         res += "]\n    Final : " + str(self.final) + "\n)"
         return res
 
+
 class Automaton():
     def __init__(self, states, initial_state):
         self.states = states
         self.initial_state = initial_state
-        
+
     def __repr__(self):
         return "Automaton(\n  States: " + str(self.states) + ",\n Initial_state: " + str(self.initial_state) + "\n)"
 
@@ -50,7 +53,8 @@ class Automaton():
             arc5 = Arc(symbols.EPSILON, result.index(state6))
             state5.arcs.append(arc5)
             # TODO
-            tmp = Automaton.parse_auxiliary(tree.sub_trees[0], initial_state, result.index(state5), result)
+            tmp = Automaton.parse_auxiliary(
+                tree.sub_trees[0], initial_state, result.index(state5), result)
             return Automaton.parse_auxiliary(tree.sub_trees[1], result.index(state6), final_state, tmp)
         elif tree.root == symbols.QUESTION:
             state9 = State([], False)
@@ -76,10 +80,10 @@ class Automaton():
             result[initial_state].arcs.append(arc9)
             return Automaton.parse_auxiliary(tree.sub_trees[0], result.index(state7), result.index(state8), result)
         elif tree.root == symbols.ALTERN:
-            state1 = State([], False) #left-automaton-initial-state
-            state2 = State([], False) #left-automaton-final-state
-            state3 = State([], False) #right-initial
-            state4 = State([], False) #right-final
+            state1 = State([], False)  # left-automaton-initial-state
+            state2 = State([], False)  # left-automaton-final-state
+            state3 = State([], False)  # right-initial
+            state4 = State([], False)  # right-final
             result.extend((state1, state2, state3, state4))
             arc2 = Arc(symbols.EPSILON, final_state)
             state2.arcs.append(arc2)
@@ -90,9 +94,10 @@ class Automaton():
             arc3 = Arc(symbols.EPSILON, result.index(state3))
             result[initial_state].arcs.append(arc3)
             # TODO
-            tmp = Automaton.parse_auxiliary(tree.sub_trees[0], result.index(state1), result.index(state2), result)
+            tmp = Automaton.parse_auxiliary(
+                tree.sub_trees[0], result.index(state1), result.index(state2), result)
             return Automaton.parse_auxiliary(tree.sub_trees[1], result.index(state3), result.index(state4), tmp)
-        elif tree.root == symbols.DOT: # TODO
+        elif tree.root == symbols.DOT:  # TODO
             return ""
         else:
             result[initial_state].arcs.append(Arc(tree.root, final_state))
@@ -161,14 +166,13 @@ class Automaton():
             auto_res.append(None)
         return auto_res
 
-
     @staticmethod
     def ligne_id(tab_auto, id):
         for i in range(len(tab_auto)):
             if tab_auto[i][0] == id:
                 return i
         # raise Exception("Can't get id")
-        return -1 # Error
+        return -1  # Error
 
     @staticmethod
     def reduce_automaton2(automaton):
@@ -290,7 +294,8 @@ class Automaton():
                     if tab_auto[i][j] != state:
                         arc = Arc(j - 1, tab_auto[i][j])
                         state2.arcs.append(arc)
-                auto2.states = Automaton.resize_auto(auto2.states, tab_auto[i][0])
+                auto2.states = Automaton.resize_auto(
+                    auto2.states, tab_auto[i][0])
                 auto2.states[tab_auto[i][0]] = state2
 
         return auto2
@@ -324,25 +329,58 @@ class Automaton():
             if i >= len(self.states):
                 fini = True
 
-    def walk(self, text):
+    def walk(self, indexing):
         state_id = self.initial_state
         occurences = 0
-        for i in range(len(text) + 1):
-            if self.states[state_id].final:
-                occurences += 1
-                state_id = self.initial_state
-            if i == len(text):
-                break
-            c = text[i]
-            partially_good = False
-            for a in self.states[state_id].arcs:
-                if a.symbol == ord(c):
-                    state_id = a.destination
-                    partially_good = True
+        # pour chaque mot de la table d'index
+        for word in indexing:
+            # on ce place sur l'état initial
+            state_id = self.initial_state
+            # on lit les caractères du mort
+            for i in range(len(word)):
+                # si l'automate arrive dans un état final c'est bon
+                if self.states[state_id].final:
+                    occurences += 1
                     break
-            if not partially_good:
-                state_id = self.initial_state
+                # si on a dépassé la taille du mot, on ne peut pas lire de nouveau caractère
+                if i >= len(word):
+                    break
+                # sinon on doit lire le caractère actuel
+                # on recupere le caractere actuel
+                c = word[i]
+                gotTransition = False
+                # on parcours les transitions de l'état actuel
+                for a in self.states[state_id].arcs:
+                    # une transition existe pour le caractère
+                    if a.symbol == ord(c):
+                        # on suit la transition
+                        gotTransition = True
+                        state_id = a.destination
+                        break
+                # si aucune transition n'existe pour le caractère, le mot est invalide
+                if not gotTransition:
+                    break
         return occurences
+
+        # state_id = self.initial_state
+        # occurences = 0
+        # for i in range(len(text) + 1):
+        #     if self.states[state_id].final:
+        #         occurences += 1
+        #         state_id = self.initial_state
+        #     if i == len(text):
+        #         break
+        #     c = text[i]
+        #     partially_good = False
+        #     for a in self.states[state_id].arcs:
+        #         if a.symbol == ord(c):
+        #             state_id = a.destination
+        #             partially_good = True
+        #             break
+        #     if not partially_good:
+        #         state_id = self.initial_state
+        # return occurences
+
 
 if __name__ == "__main__":
     """

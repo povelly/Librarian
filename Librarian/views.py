@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django.http import *
 
 from Librarian.models.automaton import Automaton
-from Librarian.utils.utils import KMP, map_library
+from Librarian.utils.utils import basic_search_on_index, map_library
 
 try:
     from Librarian import env
@@ -18,15 +18,17 @@ except:
 
 class BasicSearch(APIView):
     def get(self, request, format=None):
-        keyword = request.GET.get('keyword')
+        print("basic search")
+        keyword = request.GET.get('keyword').lower()
         if keyword is None:
             return HttpResponseBadRequest("Keyword has not been defined")
-        return HttpResponse(map_library(keyword, KMP))
+        return HttpResponse(map_library(keyword, basic_search_on_index))
 
 
 class AdvancedSearch(APIView):
     def get(self, request, format=None):
-        pattern = request.GET.get('pattern')
+        print("advance search")
+        pattern = request.GET.get('pattern').lower()
         if pattern is None:
             return HttpResponseBadRequest("Pattern has not been defined")
         return HttpResponse(map_library(pattern, lambda pattern, text: Automaton.dfa(pattern).walk(text)))

@@ -2,14 +2,19 @@ import os
 import pathlib
 import time
 import re
+import pickle
 LIBRARY = str(pathlib.Path().absolute()) + os.path.sep + \
     "static" + os.path.sep + "library"
 
 
 class Node():
+    """un noeud possède un identifiant (fileName) et une liste d'arcs vers d'autre noeuds, chaque arc est
+        représenté par une pair (fileName, distance) avec fileName = nom du noeud vers lequel va l'arc
+        et distance = distance de jaccard entre les deux noeuds qui composent l'arc"""
+
     def __init__(self, fileName, links=None):
         self.fileName = fileName
-        self.links = links or []
+        self.links = links or []  # list of pair (fileName, distance)
         # calcule la liste des mots du livre et la stock pour éviter calculs multiples
         self.words = set()
         with open(LIBRARY + "/" + fileName, 'r', errors="ignore") as file:
@@ -19,24 +24,20 @@ class Node():
                     self.words.add(word.lower())
 
     def __str__(self):
-        res = "Node(" + self.fileName + "):\n  Links:["
-        for i in range(len(self.links) - 1):
-            res += self.links[i] + ", "
-        if len(self.links) > 0:
-            res += self.links[len(self.links) - 1]
-        return res + "]"
+        return "Node(" + self.fileName + "):\n  Links:" + str(self.links) + "]"
 
-    def add_link(self, fileName):
+    def add_link(self, fileName, distance):
         if fileName == self.fileName:
             return
-        self.links.append(fileName)
+        self.links.append((fileName, distance))
 
     def distance(self, node):
         return (len(self.words.union(node.words)) - len(self.words.intersection(node.words))) / len(self.words.union(node.words))
-        # return 1 - len(words_self.intersection(words_node)) / len(words_self.union(words_node))
 
 
 class Graph():
+    """un graphe est un ensemble de noeuds, stockés dans une liste"""
+
     def __init__(self, nodes=[]):
         self.nodes = nodes
 
@@ -53,6 +54,7 @@ class Graph():
 
     @ staticmethod
     def jaccard(p=0.65):
+        """Créer un graph de jaccard, sommets = noms des fichiers"""
         graph = Graph()
         # on met tout les livres comme sommet du graphe
         for i, fileName in enumerate(os.listdir(LIBRARY)):
@@ -66,90 +68,73 @@ class Graph():
                   " (" + graph.nodes[i].fileName + ")")
             n1 = graph.nodes[i]
             # pour chaque autre noeud du graphe
-            for j in range(len(graph.nodes)):
-                if i != j:
-                    n2 = graph.nodes[j]
-                    # si distance entre les deux noeuds < p, on créer une arrete entre les deux noeuds
-                    if n1.distance(n2) < p:
-                        n1.add_link(n2.fileName)
-                        n2.add_link(n1.fileName)
+            for j in range(i+1, len(graph.nodes)):
+                n2 = graph.nodes[j]
+                # si distance entre les deux noeuds < p, on créer une arrete entre les deux noeuds
+                distance = n1.distance(n2)
+                if distance < p:
+                    n1.add_link(n2.fileName, distance)
+                    n2.add_link(n1.fileName, distance)
         return graph
 
 
-"""
-def distance(n1, n2):
-    size_intersection = 0
-    size_union = 0
-    s1 = set()
-    s2 = set()
-    with open(LIBRARY + os.path.sep + n1.fileName, 'r') as file:
-        for line in file:
-            for word in line.split():
-                s1.add(word)
-    with open(LIBRARY + os.path.sep + n2.fileName, 'r') as file:
-        for line in file:
-            for word in line.split():
-                s2.add(word)
-    return 1 - len(s1.intersection(s2)) / len(s1.union(s2))
+def closeness_ranking(jaccard, book_list):
+    """trie la liste par closeness ranking en ordre decroissant"""
 
-def jaccard_old(p = 0.70):
-    def distance_bouchon(n1, n2): # bouchon
-        return 0.4
+    def ranking(node):
+        """donne un rank au noeud"""
+        sum = 0
+        for link in bookNode.links:
+            # on ajoute la distance associé à chaque arc à la somme
+            sum += link[1]
+        # dans le cas ou le noeud n'as pas d'arcs, son ranking est le plus mauvais : 0
+        if sum == 0:
+            return 0
+        return 1 / sum
 
-    # def distance_naive(n1, n2): # algo naif pour la distance Jaccard
-    #     def get_keywords(book_name):
-    #         res = []
-    #         with open(LIBRARY + os.path.sep + book_name, 'r') as file:
-    #             for line in file:
-    #                 for word in line.split():
-    #                     if word not in res:
-    #                         res.append(word)
-    #             return res
-    #     n1_words = get_keywords(n1.fileName)
-    #     size_intersection = 0
-    #     size_union = len(n1_words)
-    #     for w in get_keywords(n2.fileName):
-    #         if w in n1_words:
-    #             size_intersection += 1
-    #         else:
-    #             size_union += 1
-    #     return 1 - size_intersection / size_union
+    def insert(res_list, bookName, bookRank):
+        """insert bookName de rank bookRank au bon endroit dans res_list 
+        pour que la liste contiennent tout les livres par ranking decroissant.
+        La list est de forme [(bookName, bookRank)]"""
+        # si la liste est vide, on ajoute l'élément
+        if len(res_list) == 0:
+            res_list.append((bookName, bookRank))
+        else:
+            # on parcourt la list et insert l'élement au bon endroit
+            isInserted = False
+            for i in range(len(res_list)):
+                if res_list[i][1] < bookRank:
+                    res_list.insert(i, (bookName, bookRank))
+                    isInserted = True
+                    break
+            # si il n'a pas été inséré, il a le plus grand rang, on l'insert à la fin
+            if not isInserted:
+                res_list.append((bookName, bookRank))
 
-    graph = Graph()
+    res = []
+    # on parcourt la liste des livres à classés
+    for bookName in book_list:
+        # on récupère le noeud associé au livre dans le graphe
+        bookNode = None
+        for node in jaccard.nodes:
+            if node.fileName == bookName:
+                bookNode = node
+                break
+        # on calcul le rank du livre
+        bookRank = ranking(bookNode)
+        # on insert le livre au bon endroit dans la liste
+        insert(res, bookName, bookRank)
+    # on enleve les ranking dans res pour ne garde que les bookName
+    res = [elem[0] for elem in res]
+    return res
 
-    for fileName in os.listdir(LIBRARY):
-        graph.add_node(Node(fileName))
-
-    for i in range(len(graph.nodes)):
-        n1 = graph.nodes[i]
-        for j in range(i + 1, len(graph.nodes)):
-            n2 = graph.nodes[j]
-            # starting_time = time.process_time()
-            # dn = distance_naive(n1, n2)
-            # time_elapsed = time.process_time() - starting_time
-            # print("time elapsed, distance(): ", time_elapsed)
-            # print("dn: ", dn)
-            # starting_time2 = time.process_time()
-            # d = distance(n1, n2)
-            # time_elapsed2 = time.process_time() - starting_time2
-            # print("time elapsed2, distance(): ", time_elapsed2)
-            # print("d3: ", n1.fileName, "<>", n2.fileName, ">>", d3)
-            # TODO remplacer la fonction
-            if n2.fileName not in n1.links and distance(n1, n2) < p:
-                n1.add_link(n2.fileName)
-                n2.add_link(n1.fileName)
-
-    # for n1 in graph.nodes:
-    #     for n2 in graph.nodes:
-    #         if n2.fileName not in n1.links and distance(n1, n2) < p:
-    #             n1.add_link(n2.fileName)
-    return graph
-"""
 
 if __name__ == "__main__":
-    # j = jaccard_old()
+    # create jaccard graph
     j = Graph.jaccard()
-    print("j:", j)
-    print("\nLinks:")
-    for i in range(len(j.nodes)):
-        print("  links[" + j.nodes[i].fileName + "]:", j.nodes[i].links)
+    # save the graph to a file
+    pickle.dump(j, open("./static/jaccard.p", "wb"))
+    # jaccard = pickle.load(open("./static/jaccard.p", "rb"))
+    # closeness_ranking(jaccard, ["110.txt", "119.txt", "125.txt"])
+
+    # print(data)
