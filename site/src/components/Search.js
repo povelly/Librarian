@@ -33,12 +33,11 @@ export default class Search extends Component {
         })
         try {
             let response = this.state.searchType === "regex" ? (await axios.get("http://127.0.0.1:8000/advanced-search", { params: { pattern: this.state.searchArea } })) : (await axios.get("http://127.0.0.1:8000/search", { params: { keyword: this.state.searchArea } }))
-
             // update state
             this.setState({
                 isLoading: false,
-                results: response.data,
-                suggestions: []
+                results: response.data.results,
+                suggestions: response.data.suggestions
             });
         } catch (e) {
             this.setState({
@@ -115,14 +114,14 @@ export default class Search extends Component {
                                                 </div>
 
                                                 <div id="suggestionsGroup">
-                                                    <div>Suggestions:</div>
+                                                    <div>{this.state.suggestions.length} suggestions:</div>
                                                     <div id="suggestions">
                                                         {
                                                             // affichage des suggestions
                                                             this.state.suggestions.map((suggestion, i) => {
                                                                 return (
                                                                     <div key={i}>
-                                                                        {suggestion}
+                                                                        <a href="javascript:void(0)" onClick={this.handleDownloadFile} name={suggestion}>{suggestion}</a>
                                                                     </div>
                                                                 );
                                                             })

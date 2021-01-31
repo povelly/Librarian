@@ -27,6 +27,25 @@ def basic_search_on_index(keyword, indexing):
         return 0
 
 
+def suggestion(jaccard, book_list):
+    res = set()
+    # on parcourt la liste de livres résultat
+    for i, bookName in enumerate(book_list):
+        # on visite au plus les voisins des 3 premiers, jusqu'a avoir max 10 suggestion
+        if i > 2 or len(res) > 10:
+            break
+        # on trouve le noeud dans jaccard
+        for node in jaccard.nodes:
+            if bookName == node.fileName:
+                # on ajoute ses voisins
+                for link in node.links:
+                    if len(res) < 10:
+                        res.add(link[0])
+                    else:
+                        break
+    return list(res)
+
+
 def KMP(pattern, text):
     tab = [0] * len(pattern)               # Tableau du pattern
     occurences = 0
@@ -63,7 +82,11 @@ def map_library(pattern, criterion):
         book_count = book_count + 1
     # on trie la liste par closeness ranking
     matches = closeness_ranking(jaccard, matches)
-    return json.dumps(matches)
+    # on recupère les suggestions
+    suggestions = suggestion(jaccard, matches)
+    # on construit le resultat
+    res = {"results": matches, "suggestions": suggestions}
+    return json.dumps(res)
 
 # retourne la liste de tout les mots du livre bookname
 
