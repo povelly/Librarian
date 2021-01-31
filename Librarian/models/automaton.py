@@ -42,7 +42,8 @@ class Automaton():
     def parse_tree(tree):
         initial_state = State([], False)
         final_state = State([], True)
-        return Automaton(Automaton.parse_auxiliary(tree, 0, 1, [initial_state, final_state]), 0)
+        return Automaton(Automaton.parse_auxiliary(
+            tree, 0, 1, [initial_state, final_state]), 0)
 
     @staticmethod
     def parse_auxiliary(tree, initial_state, final_state, result):
@@ -302,11 +303,17 @@ class Automaton():
 
     @staticmethod
     def dfa(regex):
+        print("build dfa")
         tt = RegEx(regex).parsex()
+        print("parsex ok")
         auto_res = Automaton.parse_tree(tt)
+        print("parse_tree ok")
         auto_e1 = Automaton.reduce_automaton(auto_res)
+        print("reduce ok")
         auto2 = Automaton.reduce_automaton2(auto_e1)
+        print("reduce2 ok")
         auto2.cleanUp()
+        print("cleanup ok")
         return auto2
 
     def cleanUp(self):
@@ -337,7 +344,7 @@ class Automaton():
             # on ce place sur l'état initial
             state_id = self.initial_state
             # on lit les caractères du mort
-            for i in range(len(word)):
+            for i in range(len(word) + 1):
                 # si l'automate arrive dans un état final c'est bon
                 if self.states[state_id].final:
                     occurences += 1
@@ -403,5 +410,5 @@ if __name__ == "__main__":
     # tt2 = r2.parsex()
     # print(repr(tt2))
 
-    b = Automaton.dfa("c?")
+    b = Automaton.dfa("(el)*")
     print(b)
